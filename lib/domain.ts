@@ -104,6 +104,7 @@ export type Application = {
   environment: string;
   problem: string;
   measurements: Record<string, number>;
+  measurement_evidence?: import("./photo-measurement").Evidence[];
   status: Status;
   created_at: string;
   updated_at: string;
