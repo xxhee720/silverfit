@@ -55,7 +55,10 @@ export async function signup(
     const { error } = await client.auth.signUp({
       email: data.email,
       password: data.password,
-      options: { data: { name: data.name, role: data.role } },
+      options: {
+        data: { name: data.name, role: data.role },
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/auth/confirm`,
+      },
     });
     check(error);
     return {
@@ -76,7 +79,9 @@ export async function requestReset(
   f: FormData,
 ): Promise<ActionState> {
   const client = await supabase();
-  const { error } = await client.auth.resetPasswordForEmail(str(f, "email"));
+  const { error } = await client.auth.resetPasswordForEmail(str(f, "email"), {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/auth/confirm?type=recovery`,
+  });
   return error
     ? { error: "잠시 후 다시 요청해 주세요." }
     : { success: "등록된 주소라면 비밀번호 재설정 이메일이 발송됩니다." };
