@@ -84,6 +84,13 @@ export default async function Detail({
           다시 추가해 주세요.
         </p>
       )}
+      {a.measurement_evidence && a.measurement_evidence.length > 0 && (
+        <p className="notice">
+          일부 치수는 사진 기준물 비율로 계산한 추정값입니다. 제작 전 실측을
+          확인해 주세요. 사진 업로드가 실패한 경우 측정 근거 사진을 다시
+          첨부해야 합니다.
+        </p>
+      )}
       {results.some((r) => r.error) && (
         <p className="notice error">
           일부 이력을 불러오지 못했습니다. 새로고침해 주세요.
