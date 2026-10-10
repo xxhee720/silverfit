@@ -39,6 +39,12 @@ beforeAll(async () => {
   await db.exec(
     readFileSync("supabase/migrations/202610090001_initial.sql", "utf8"),
   );
+  await db.exec(
+    readFileSync(
+      "supabase/migrations/202610110001_photo_measurements.sql",
+      "utf8",
+    ),
+  );
   await db.query("insert into auth.users values ($1,$2),($3,$2),($4,$2)", [
     user,
     JSON.stringify({ name: "테스트", role: "admin" }),
@@ -293,4 +299,47 @@ describe.sequential("실제 PostgreSQL 마이그레이션·RLS·안전 승인", 
       ]),
     ).rejects.toThrow();
   });
+});
+
+it("사진 치수 근거 저장과 검증, 다른 사용자 격리", async () => {
+  await as(user);
+  const evidence = {
+    method: "photo-reference-v1",
+    field: "shaft_diameter_mm",
+    reference_mm: 100,
+    image_width: 1000,
+    image_height: 1000,
+    points: [
+      { x: 0, y: 0 },
+      { x: 0.5, y: 0 },
+      { x: 0, y: 0.5 },
+      { x: 0.095, y: 0.5 },
+    ],
+    estimated_mm: 19,
+  };
+  const { rows } = await db.query<{ id: string }>(
+    "select create_application($1) id",
+    [{ ...input, measurement_evidence: [evidence] }],
+  );
+  const id = rows[0].id;
+  expect(
+    (
+      await db.query<{ measurement_evidence: unknown[] }>(
+        "select measurement_evidence from applications where id=$1",
+        [id],
+      )
+    ).rows[0].measurement_evidence,
+  ).toEqual([evidence]);
+  await expect(
+    db.query("select create_application($1)", [
+      { ...input, measurement_evidence: [{ ...evidence, estimated_mm: 20 }] },
+    ]),
+  ).rejects.toThrow();
+  await expect(
+    db.query("select create_application_v1($1)", [input]),
+  ).rejects.toThrow();
+  await as(other);
+  expect(
+    (await db.query("select id from applications where id=$1", [id])).rows,
+  ).toHaveLength(0);
 });
