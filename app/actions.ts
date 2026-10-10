@@ -1,4 +1,5 @@
 "use server";
+import { evidenceSchema, estimateLength } from "@/lib/photo-measurement";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -113,11 +114,33 @@ export async function createApplication(
       measurements,
       consent: f.get("consent") === "on",
     });
+    const evidence = z
+      .array(evidenceSchema)
+      .max(4)
+      .parse(JSON.parse(str(f, "measurement_evidence") || "[]"));
+    const seen = new Set<string>();
+    for (const e of evidence) {
+      if (
+        seen.has(e.field) ||
+        !(e.field in products[product].fields) ||
+        estimateLength(
+          e.points,
+          e.image_width,
+          e.image_height,
+          e.reference_mm,
+        ) !== e.estimated_mm ||
+        measurements[e.field] !== e.estimated_mm
+      )
+        throw new Error("사진 치수와 입력값을 확인해 주세요.");
+      seen.add(e.field);
+    }
     const photo = f.get("photo");
+    if (evidence.length && (!(photo instanceof File) || !photo.size))
+      throw new Error("측정에 사용한 사진이 필요합니다.");
     if (photo instanceof File && photo.size) validatePhoto(photo);
     const client = await supabase();
     const { data, error } = await client.rpc("create_application", {
-      payload: input,
+      payload: { ...input, measurement_evidence: evidence },
     });
     check(error);
     id = data as string;
@@ -128,13 +151,11 @@ export async function createApplication(
           .from("application-photos")
           .upload(path, photo, { contentType: photo.type, upsert: false });
         check(uploaded.error);
-        const meta = await client
-          .from("attachments")
-          .insert({
-            application_id: id,
-            path,
-            original_name: photo.name.slice(0, 200),
-          });
+        const meta = await client.from("attachments").insert({
+          application_id: id,
+          path,
+          original_name: photo.name.slice(0, 200),
+        });
         check(meta.error);
       } catch {
         photoFailed = true;
@@ -167,13 +188,11 @@ export async function addPhoto(
     );
     check(
       (
-        await client
-          .from("attachments")
-          .insert({
-            application_id: id,
-            path,
-            original_name: file.name.slice(0, 200),
-          })
+        await client.from("attachments").insert({
+          application_id: id,
+          path,
+          original_name: file.name.slice(0, 200),
+        })
       ).error,
     );
     revalidatePath(`/applications/${id}`);
@@ -256,12 +275,10 @@ export async function addDesign(
     const path = `${id}/${crypto.randomUUID()}.${file.name.split(".").pop()!.toLowerCase()}`;
     check(
       (
-        await client.storage
-          .from("design-files")
-          .upload(path, file, {
-            contentType: "application/octet-stream",
-            upsert: false,
-          })
+        await client.storage.from("design-files").upload(path, file, {
+          contentType: "application/octet-stream",
+          upsert: false,
+        })
       ).error,
     );
     check(
