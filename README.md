@@ -38,11 +38,12 @@ pnpm dev
 
 http://localhost:3000 에서 확인합니다. 환경변수가 없으면 홈·신청 화면 미리보기만 가능하고 실제 저장·로그인은 불가합니다. 데모 데이터나 가짜 성공 응답은 사용하지 않습니다.
 
-`.env.local`에 Supabase 프로젝트 Settings → API에서 다음 두 값을 넣습니다.
+`.env.local`에 Supabase 프로젝트 Settings → API에서 다음 값을 넣습니다.
 
 ```dotenv
 NEXT_PUBLIC_SUPABASE_URL=https://PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=공개_publishable_또는_anon_키
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
 서비스 역할 키는 앱에 넣지 않습니다. 브라우저·서버 모두 로그인한 사용자의 권한과 RLS로 접근합니다.
@@ -51,8 +52,8 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=공개_publishable_또는_anon_키
 
 1. Supabase 프로젝트를 만듭니다. SQL Editor에서 `supabase/migrations/202610090001_initial.sql` 전체를 새 프로젝트에 한 번 실행합니다. Auth/Storage는 Supabase 제공 스키마를 사용합니다.
 2. 또는 Supabase CLI 설치 후 `supabase init`, `supabase link --project-ref PROJECT_REF`, `supabase db push`를 실행합니다. 기존 프로젝트에 적용하기 전 백업과 마이그레이션 충돌 확인이 필요합니다.
-3. Authentication → URL Configuration: Site URL을 로컬 `http://localhost:3000` 또는 실제 배포 주소로 지정합니다. Redirect URLs에 각 주소의 `/auth/confirm`, `/auth/reset`을 허용합니다.
-4. 이메일 확인을 켜고 아래 이메일 템플릿을 설정합니다. 운영 환경에서는 SMTP 발송 서비스를 연결하고 발송 제한·스팸 도달 여부를 확인합니다.
+3. Authentication → URL Configuration: Site URL을 로컬 `http://localhost:3000` 또는 실제 배포 주소로 지정합니다. Redirect URLs에 각 주소의 `/auth/confirm`, `/auth/confirm?type=recovery`, `/auth/reset`을 허용합니다. 앱의 `NEXT_PUBLIC_SITE_URL`도 같은 주소로 설정합니다.
+4. 이메일 확인을 유지합니다. 기본 메일 템플릿의 PKCE 확인 링크와 아래 사용자 지정 token_hash 링크를 모두 처리합니다. 기본 PKCE 링크는 가입/재설정을 요청한 브라우저에서 열어야 합니다. 일반 사용자 가입을 운영하려면 별도 SMTP가 필요합니다. Supabase 기본 발송은 프로젝트 조직 멤버 주소로 제한되며, Free에서는 SMTP 연결 전 템플릿 수정도 제한됩니다. 아래 사용자 지정 템플릿은 SMTP를 연결한 뒤 선택적으로 적용합니다.
 5. 앱에서 회원가입 → 이메일 확인 → 로그인합니다.
 6. 관리자로 지정할 계정을 SQL Editor에서 별도 등록합니다.
 
@@ -121,7 +122,7 @@ pnpm test:e2e
 
 ## 배포
 
-Vercel에서 이 저장소를 연결하고 Root Directory를 `.`으로 설정합니다. Framework Preset은 Next.js, Build Command `pnpm build`, Install Command `pnpm install --frozen-lockfile`. 두 공개 환경변수를 Preview/Production 각각 설정하고 배포합니다. Supabase Site URL·이메일 템플릿 주소를 실제 HTTPS 도메인으로 수정합니다. Preview는 별도 Supabase 프로젝트를 권장합니다.
+Vercel에서 이 저장소를 연결하고 Root Directory를 `.`으로 설정합니다. Framework Preset은 Next.js, Build Command `pnpm build`, Install Command `pnpm install --frozen-lockfile`. 세 공개 환경변수를 설정 (`NEXT_PUBLIC_SITE_URL`은 실제 HTTPS 도메인)하고 배포합니다. Supabase Site URL·리다이렉트 허용 주소를 실제 HTTPS 도메인으로 수정합니다. 사용자 지정 메일 템플릿을 사용한다면 해당 주소도 수정합니다. Preview는 별도 Supabase 프로젝트를 권장합니다.
 
 일반 Node 서버에서도 `pnpm build && pnpm start`로 실행할 수 있습니다. HTTPS 리버스 프록시, 지속 실행 프로세스, 환경변수를 설정합니다. 정적 HTML export로는 서버 인증·액션을 제공할 수 없습니다.
 
