@@ -24,9 +24,7 @@ export default async function New({
             연결 전 미리보기입니다. 실제 신청은 Supabase 설정과 로그인 후
             가능합니다.
           </p>
-          <fieldset disabled className="preview-fieldset">
-            <ApplicationForm initial={initial} />
-          </fieldset>
+          <ApplicationForm initial={initial} preview />
         </>
       )}
     </div>
