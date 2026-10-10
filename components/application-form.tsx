@@ -3,10 +3,24 @@ import { useState } from "react";
 import { ActionForm } from "./action-form";
 import { createApplication } from "@/app/actions";
 import { products, type Product } from "@/lib/domain";
-export function ApplicationForm({ initial = "ramp" }: { initial?: Product }) {
+import { PhotoMeasurement } from "./photo-measurement";
+import type { Evidence } from "@/lib/photo-measurement";
+export function ApplicationForm({
+  initial = "ramp",
+  preview = false,
+}: {
+  initial?: Product;
+  preview?: boolean;
+}) {
   const [kind, setKind] = useState<Product>(initial);
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [evidence, setEvidence] = useState<Record<string, Evidence>>({});
   return (
-    <ActionForm action={createApplication} label="신청 접수하기">
+    <ActionForm
+      disabled={preview}
+      action={createApplication}
+      label="신청 접수하기"
+    >
       <section className="card">
         <div className="step-heading">
           <span>01</span>
@@ -20,7 +34,11 @@ export function ApplicationForm({ initial = "ramp" }: { initial?: Product }) {
                 name="product"
                 value={key}
                 checked={kind === key}
-                onChange={() => setKind(key as Product)}
+                onChange={() => {
+                  setKind(key as Product);
+                  setValues({});
+                  setEvidence({});
+                }}
               />
               <strong>{p.name}</strong>
               <small>{p.important ? "안전 검증 필수" : "선택 품목"}</small>
@@ -94,6 +112,19 @@ export function ApplicationForm({ initial = "ramp" }: { initial?: Product }) {
           모든 치수의 단위는 mm입니다. 정확한 값을 모르면 담당자와 측정한 뒤
           신청해 주세요.
         </p>
+        <PhotoMeasurement
+          kind={kind}
+          onReset={() => setEvidence({})}
+          onMeasure={(e) => {
+            setValues((v) => ({ ...v, [e.field]: String(e.estimated_mm) }));
+            setEvidence((v) => ({ ...v, [e.field]: e }));
+          }}
+        />
+        <input
+          type="hidden"
+          name="measurement_evidence"
+          value={JSON.stringify(Object.values(evidence))}
+        />
         <div className="field-grid" key={kind}>
           {Object.entries(products[kind].fields).map(([key, label]) => (
             <label key={key}>
@@ -103,6 +134,15 @@ export function ApplicationForm({ initial = "ramp" }: { initial?: Product }) {
                   type="number"
                   inputMode="decimal"
                   name={key}
+                  value={values[key] || ""}
+                  onChange={(e) => {
+                    setValues((v) => ({ ...v, [key]: e.target.value }));
+                    setEvidence((v) => {
+                      const next = { ...v };
+                      delete next[key];
+                      return next;
+                    });
+                  }}
                   step="0.1"
                   min="0.1"
                   max="10000"
@@ -110,18 +150,10 @@ export function ApplicationForm({ initial = "ramp" }: { initial?: Product }) {
                 />
                 <span>mm</span>
               </div>
+              {evidence[key] && <small>사진 추정값 · 실측 확인 필요</small>}
             </label>
           ))}
         </div>
-        <label className="upload">
-          상황 사진 (선택)
-          <input
-            type="file"
-            name="photo"
-            accept="image/jpeg,image/png,image/webp"
-          />
-          <small>JPG·PNG·WebP, 10MB 이하 · 얼굴과 주소는 제외해 주세요.</small>
-        </label>
       </section>
       <section className="card">
         <h2>신청 전 확인</h2>

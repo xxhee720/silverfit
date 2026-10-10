@@ -6,11 +6,13 @@ export function ActionForm({
   children,
   label = "저장하기",
   className = "",
+  disabled = false,
 }: {
   action: (state: ActionState, form: FormData) => Promise<ActionState>;
   children: React.ReactNode;
   label?: string;
   className?: string;
+  disabled?: boolean;
 }) {
   const [state, submit, pending] = useActionState(action, {});
   return (
@@ -24,7 +26,7 @@ export function ActionForm({
         )}
         {state.success && <p className="notice success">{state.success}</p>}
       </div>
-      <button className="button" disabled={pending}>
+      <button className="button" disabled={pending || disabled}>
         {pending ? "처리 중…" : label}
       </button>
     </form>
