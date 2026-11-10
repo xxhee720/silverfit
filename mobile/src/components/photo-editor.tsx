@@ -23,13 +23,15 @@ export type Photo = {
   bytes: ArrayBuffer;
 };
 export async function choosePhoto(camera: boolean): Promise<Photo | null> {
-  const permission = camera
-    ? await ImagePicker.requestCameraPermissionsAsync()
-    : await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (!permission.granted)
-    throw Error(
-      "사진 권한이 필요합니다. 휴대폰 설정에서 권한을 허용하거나 치수를 직접 입력해 주세요.",
-    );
+  // The system photo picker grants access only to the selected photo.
+  // Request camera permission only when the user chooses to take a photo.
+  if (camera) {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted)
+      throw Error(
+        "카메라 권한이 필요합니다. 휴대폰 설정에서 허용하거나 앨범에서 사진을 선택해 주세요.",
+      );
+  }
   const result = camera
     ? await ImagePicker.launchCameraAsync({
         mediaTypes: ["images"],
