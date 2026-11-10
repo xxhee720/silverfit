@@ -17,7 +17,12 @@ export default async function New({
       <h1>새 보조장치 신청</h1>
       <p className="muted">사용하실 분의 생활환경에 맞춰 함께 준비합니다.</p>
       {configured() ? (
-        <ApplicationForm initial={initial} />
+        <ApplicationForm
+          initial={initial}
+          aiEnabled={Boolean(
+            process.env.MEASUREMENT_AI_URL && process.env.MEASUREMENT_AI_TOKEN,
+          )}
+        />
       ) : (
         <>
           <p className="notice">

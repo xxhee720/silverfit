@@ -1,4 +1,5 @@
 "use client";
+import { AiPhotoAnalysis } from "./ai-photo-analysis";
 import { useEffect, useRef, useState } from "react";
 import {
   estimateLength,
@@ -10,11 +11,14 @@ export function PhotoMeasurement({
   kind,
   onMeasure,
   onReset,
+  aiEnabled = false,
 }: {
   kind: Product;
+  aiEnabled?: boolean;
   onMeasure: (value: Evidence) => void;
   onReset: () => void;
 }) {
+  const [processed, setProcessed] = useState<File | null>(null);
   const input = useRef<HTMLInputElement>(null),
     sequence = useRef(0);
   const [url, setUrl] = useState(""),
@@ -39,6 +43,7 @@ export function PhotoMeasurement({
     setBusy(true);
     setError("");
     setUrl("");
+    setProcessed(null);
     setPoints([]);
     onReset();
     if (input.current) input.current.value = "";
@@ -71,6 +76,7 @@ export function PhotoMeasurement({
         new File([blob], "measurement.jpg", { type: "image/jpeg" }),
       );
       if (input.current) input.current.files = transfer.files;
+      setProcessed(transfer.files[0]);
       setSize({ width: canvas.width, height: canvas.height });
       setUrl(URL.createObjectURL(blob));
     } catch (e) {
@@ -90,7 +96,7 @@ export function PhotoMeasurement({
   ];
   return (
     <div className="photo-measurement">
-      <h3>사진 촬영과 치수 계산</h3>
+      <h3>사진 촬영과 치수 분석</h3>
       <p>
         자로 잰 기준 길이를 대상과 같은 평면에 놓고 정면에서 촬영해 주세요.
         얼굴·주소는 제외하고, 카드 대신 자 또는 개인정보가 없는 기준물을 사용해
@@ -131,6 +137,7 @@ export function PhotoMeasurement({
             sequence.current++;
             setBusy(false);
             setUrl("");
+            setProcessed(null);
             setPoints([]);
             onReset();
             if (input.current) input.current.value = "";
@@ -151,6 +158,15 @@ export function PhotoMeasurement({
       {busy && <p role="status">사진을 준비하고 있습니다…</p>}
       {url && (
         <>
+          {processed && (
+            <AiPhotoAnalysis
+              key={`${url}-${kind}`}
+              photo={processed}
+              kind={kind}
+              enabled={aiEnabled}
+            />
+          )}
+          <h3>기준물로 치수 계산</h3>
           <div className="field-grid">
             <label>
               기준물의 실제 길이 (mm)

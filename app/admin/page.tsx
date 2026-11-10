@@ -21,6 +21,11 @@ export default async function Admin({
       c.from("applications").select("status"),
       c.from("feedback").select("id").eq("incident", true),
     ]);
+  const deletionRequests = await c
+    .from("account_deletion_requests")
+    .select("user_id,requested_at")
+    .order("requested_at")
+    .limit(200);
   return (
     <div className="container">
       <span className="eyebrow">운영 담당자</span>
@@ -50,6 +55,29 @@ export default async function Admin({
           <strong>{incidents?.length || 0}</strong>
         </div>
       </div>
+      <section className="card">
+        <h2>계정 삭제 요청</h2>
+        {deletionRequests.error ? (
+          <p className="notice">
+            삭제 요청 목록을 불러오지 못했습니다. 새 마이그레이션 적용 여부를
+            확인해 주세요.
+          </p>
+        ) : deletionRequests.data?.length ? (
+          <ul>
+            {deletionRequests.data.map((r) => (
+              <li key={r.user_id}>
+                계정 {r.user_id} · 요청일 {date(r.requested_at)}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>대기 중인 요청이 없습니다.</p>
+        )}
+        <p>
+          담당자는 본인 확인·보존 사유 검토 후 비공개 파일·관련 데이터·인증
+          계정을 삭제하고 결과를 안내해 주세요.
+        </p>
+      </section>
       <form className="filter" method="get">
         <label>
           진행 상태

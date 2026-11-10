@@ -8,3 +8,10 @@ test-results/
 
 .DS_Store
 .pnpm-store/
+
+__pycache__/
+*.pyc
+.venv/
+*.apk
+*.aab
+*.ipa

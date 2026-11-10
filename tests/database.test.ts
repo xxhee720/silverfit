@@ -45,6 +45,15 @@ beforeAll(async () => {
       "utf8",
     ),
   );
+  await db.exec(
+    readFileSync("supabase/migrations/202611100001_ai_requests.sql", "utf8"),
+  );
+  await db.exec(
+    readFileSync(
+      "supabase/migrations/202611100002_account_deletion.sql",
+      "utf8",
+    ),
+  );
   await db.query("insert into auth.users values ($1,$2),($3,$2),($4,$2)", [
     user,
     JSON.stringify({ name: "테스트", role: "admin" }),
@@ -342,4 +351,34 @@ it("사진 치수 근거 저장과 검증, 다른 사용자 격리", async () =>
   expect(
     (await db.query("select id from applications where id=$1", [id])).rows,
   ).toHaveLength(0);
+});
+
+describe.sequential("모바일·AI 접근 정책", () => {
+  it("계정별 AI 요청 할당량을 DB에서 제한한다", async () => {
+    await as(user);
+    for (let i = 0; i < 3; i++) await rpc("select reserve_ai_analysis()");
+    await expect(rpc("select reserve_ai_analysis()")).rejects.toThrow();
+    await as(other);
+    await expect(rpc("select reserve_ai_analysis()")).resolves.toBeTruthy();
+    await expect(rpc("select * from ai_analysis_requests")).rejects.toThrow();
+  });
+  it("삭제 요청은 중복 접수되지 않으며 다른 사용자에게 보이지 않는다", async () => {
+    await as(user);
+    await rpc("select request_account_deletion()");
+    await rpc("select request_account_deletion()");
+    expect(
+      (await rpc("select * from account_deletion_requests")).rows.length,
+    ).toBe(1);
+    await as(other);
+    expect(
+      (await rpc("select * from account_deletion_requests")).rows.length,
+    ).toBe(0);
+    await expect(
+      rpc("delete from account_deletion_requests"),
+    ).rejects.toThrow();
+    await as(admin);
+    expect(
+      (await rpc("select * from account_deletion_requests")).rows.length,
+    ).toBe(1);
+  });
 });

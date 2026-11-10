@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "SilverFit · 실버핏",
+    "slug": "silverfit-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.xxhee720.silverfit",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#fff7ed"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.xxhee720.silverfit"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "신청에 첨부할 이동보조 대상 사진을 선택합니다.",
+          "cameraPermission": "이동보조 대상과 설치 공간을 촬영합니다.",
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "scheme": "silverfit"
+  }
+}

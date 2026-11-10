@@ -8,9 +8,11 @@ import type { Evidence } from "@/lib/photo-measurement";
 export function ApplicationForm({
   initial = "ramp",
   preview = false,
+  aiEnabled = false,
 }: {
   initial?: Product;
   preview?: boolean;
+  aiEnabled?: boolean;
 }) {
   const [kind, setKind] = useState<Product>(initial);
   const [values, setValues] = useState<Record<string, string>>({});
@@ -114,6 +116,7 @@ export function ApplicationForm({
         </p>
         <PhotoMeasurement
           kind={kind}
+          aiEnabled={aiEnabled}
           onReset={() => setEvidence({})}
           onMeasure={(e) => {
             setValues((v) => ({ ...v, [e.field]: String(e.estimated_mm) }));

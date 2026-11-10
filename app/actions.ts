@@ -350,3 +350,20 @@ export async function addReview(
     return message(e);
   }
 }
+
+export async function requestDeletion(
+  _: ActionState,
+  f: FormData,
+): Promise<ActionState> {
+  await requireUser();
+  if (f.get("confirm") !== "on")
+    return { error: "삭제 요청 의사를 확인해 주세요." };
+  const client = await supabase();
+  const { error } = await client.rpc("request_account_deletion");
+  return error
+    ? { error: "삭제 요청을 접수하지 못했습니다. 담당자에게 문의해 주세요." }
+    : {
+        success:
+          "삭제 요청이 접수됐습니다. 담당자가 확인해 처리합니다. 아직 삭제된 상태는 아닙니다.",
+      };
+}

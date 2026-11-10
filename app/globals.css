@@ -1069,3 +1069,6 @@ footer p {
   line-height: 24px;
   pointer-events: none;
 }
+
+.ai-photo-panel { padding: 20px; margin-block: 20px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 16px; }
+.ai-photo-panel h3 small { display: inline-block; font-size: 13px; color: #9a3412; }
