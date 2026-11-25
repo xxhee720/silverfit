@@ -26,7 +26,13 @@ lock = asyncio.Lock()
 async def lifespan(app):
     if not TOKEN or len(TOKEN) < 32:
         raise RuntimeError("Set a random MEASUREMENT_AI_TOKEN of at least 32 characters")
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    requested = os.environ.get("MEASUREMENT_AI_DEVICE", "auto")
+    if requested not in ("auto", "cpu", "cuda", "mps"):
+        raise RuntimeError("MEASUREMENT_AI_DEVICE must be auto, cpu, cuda or mps")
+    device = requested if requested != "auto" else (
+        "cuda" if torch.cuda.is_available() else
+        "mps" if torch.backends.mps.is_available() else "cpu"
+    )
     models.update(device=device,
         dp=DepthProImageProcessor.from_pretrained(MODEL),
         depth=DepthProForDepthEstimation.from_pretrained(MODEL, use_fov_model=True).to(device).eval(),

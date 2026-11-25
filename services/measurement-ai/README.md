@@ -48,3 +48,13 @@ python -m unittest discover -p 'test_*.py'
 - Depth Pro: https://github.com/apple/ml-depth-pro
 - Transformers Depth Pro: https://huggingface.co/docs/transformers/model_doc/depth_pro
 - Grounding DINO: https://huggingface.co/docs/transformers/model_doc/grounding-dino
+
+## 무료 로컬 테스트 (Mac 포함)
+
+```sh
+.venv/bin/python run_local.py
+```
+
+이 실행기는 `127.0.0.1:8000`에만 바인딩하고, `.env.local`에 임의의 서버 토큰을 최초 1회 생성합니다(권한 600, Git 제외). 모델 캐시는 `.venv/model-cache`에 저장합니다. 비밀 파일을 공유하거나 커밋하지 마세요. 장치는 CUDA → Apple MPS → CPU 순으로 선택하며, `MEASUREMENT_AI_DEVICE=cpu` 등으로 명시할 수 있습니다. 장치 오류가 나도 임의 치수로 대체하지 않습니다.
+
+로컬 실행만으로 배포 웹앱에서 접근할 수는 없습니다. 별도의 HTTPS 연결과 Vercel의 서버 전용 환경변수 설정이 필요합니다. 임시 연결은 컴퓨터 절전·종료 또는 연결 프로세스 종료 시 중단되므로 상시 서비스로 안내하지 마세요. 검증 후에만 웹앱 분석을 활성화합니다.
