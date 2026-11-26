@@ -84,3 +84,7 @@ pnpm dlx eas-cli@latest submit --platform android --latest
 
 공식 빌드 안내: https://docs.expo.dev/build/setup/
 공식 제출 안내: https://docs.expo.dev/deploy/submit-to-app-stores/
+
+### AI 사진 전송 회귀 검사
+
+루트와 mobile 의존성을 설치한 뒤 루트에서 `pnpm test:native`를 실행합니다. 설치된 Expo 58의 실제 multipart 변환기로 JPEG 바이트·파일명·품목·동의 필드를 직렬화하고 다시 해석합니다. URI 파일 객체는 Expo 58 fetch가 지원하지 않아, AI 전송은 명시적인 expo/fetch와 bytes() 제공 파일 파트를 사용합니다.

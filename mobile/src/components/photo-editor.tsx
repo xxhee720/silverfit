@@ -3,6 +3,8 @@ import { Image, Pressable, Text, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { decode } from "base64-arraybuffer";
+import { fetch as expoFetch } from "expo/fetch";
+import { aiPhotoPart } from "../lib/ai-photo-part";
 import { Button, Choice, Field, styles } from "./ui";
 import { client, site } from "../lib/client";
 import { products, type Product } from "../../../lib/domain";
@@ -112,14 +114,10 @@ export function PhotoEditor({
       const { data } = await client.auth.getSession();
       if (!data.session) throw Error("로그인이 필요합니다.");
       const form = new FormData();
-      form.append("photo", {
-        uri: photo.uri,
-        name: "photo.jpeg",
-        type: "image/jpeg",
-      } as unknown as Blob);
+      form.append("photo", aiPhotoPart(photo.bytes) as unknown as Blob);
       form.append("product", kind);
       form.append("consent", "true");
-      const response = await fetch(`${site}/api/measurements/analyze`, {
+      const response = await expoFetch(`${site}/api/measurements/analyze`, {
         method: "POST",
         headers: { Authorization: `Bearer ${data.session.access_token}` },
         body: form,
